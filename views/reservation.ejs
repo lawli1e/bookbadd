@@ -61,17 +61,26 @@
         header {
             margin-bottom: 20px;
         }
-        .nav_links {
+        .nav {
+            display: flex; /* Add flexbox */
+            justify-content: center; /* Center items horizontally */
+            align-items: center; /* Center items vertically */
+        }
+        .nav_links{
             list-style: none;
-            display: flex;
-            justify-content: center;
+            display: flex; /* Add flexbox */
+            justify-content: center; /* Center items horizontally */
+            align-items: center; /* Center items vertically */
         }
         .nav_links li {
-            margin: 0 20px;
+            display: inline-block;
+            padding: 0px 150px;
         }
-        .nav_links a {
-            text-decoration: none;
-            color: #333;
+        .nav_links li a {
+            transition: all 0.3s ease 0s;
+        }
+        .nav_links li a:hover{
+            color: #0088a9;
         }
         .divider {
             height: 2px; 

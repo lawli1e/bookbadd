@@ -80,6 +80,10 @@ app.get("/logout", (req, res) => {
   res.redirect("/login");
 });
 
+app.get("/home", (req, res) => {
+  res.render('home');
+});
+
 
 app.get('/reservation', (req, res) => {
   const today = new Date().toISOString().split('T')[0];
