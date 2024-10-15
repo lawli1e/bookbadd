@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Court Reservation Form</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap');
+        * {
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            background-color: #eaebec;
+        }
+        body {
+            padding: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .court-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .court-section {
+            width: 45%;
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .time-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .time-button {
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+        .time-button.booked {
+            background-color: #ff6b6b;
+            color: white;
+            cursor: not-allowed;
+        }
+        .time-button:not(.booked) {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #date {
+            display: block;
+            margin: 0 auto 20px;
+            padding: 10px;
+        }
+        header {
+            margin-bottom: 20px;
+        }
+        .nav_links {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+        }
+        .nav_links li {
+            margin: 0 20px;
+        }
+        .nav_links a {
+            text-decoration: none;
+            color: #333;
+        }
+        .divider {
+            height: 2px; 
+            background-color: #ccc;
+            margin: 20px auto;
+            width: 90%; 
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul class="nav_links">
+                <li><a href="/reservation">Reservations</a></li>
+                <li><a href="/bookingStatus">Booking</a></li>
+                <li><a href="javascript:void(0)" id="logout">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="divider"></div>
+
+    <h1>Court Reservation</h1>
+    <input type="date" id="date" name="date" required>
+
+    <div class="court-container" id="courtContainer">
+        <!-- Court sections will be dynamically added here -->
+    </div>
+
+    <script>
+        const courts = 8;
+        const timeSlots = [
+            "08:00", "09:00", "10:00", "11:00",
+            "12:00", "13:00", "14:00", "15:00",
+            "16:00", "17:00", "18:00", "19:00",
+            "20:00", "21:00", "22:00"
+        ];
+
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        function createCourtSections() {
+            const container = document.getElementById('courtContainer');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= courts; i++) {
+                const section = document.createElement('div');
+                section.className = 'court-section';
+                section.innerHTML = `
+                    <h2>Court ${i}</h2>
+                    <div class="time-buttons" id="court${i}Times"></div>
+                `;
+                container.appendChild(section);
+
+                const timeButtonsContainer = document.getElementById(`court${i}Times`);
+                timeSlots.forEach(time => {
+                    const button = document.createElement('button');
+                    button.className = 'time-button';
+                    button.textContent = time;
+                    button.dataset.court = i;
+                    button.dataset.time = time;
+                    button.addEventListener('click', handleTimeSelection);
+                    timeButtonsContainer.appendChild(button);
+                });
+            }
+        }
+
+        async function fetchBookedTimeSlots() {
+            const date = document.getElementById("date").value;
+            if (!date) return;
+
+            try {
+                for (let court = 1; court <= courts; court++) {
+                    const response = await fetch(`/api/bookings?date=${date}&court=${court}`);
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch booked time slots for court ${court}`);
+                    }
+                    const bookedTimeSlots = await response.json();
+
+                    const courtTimeButtons = document.querySelectorAll(`#court${court}Times .time-button`);
+                    courtTimeButtons.forEach(button => {
+                        button.classList.remove('booked');
+                        const buttonTime = button.dataset.time;
+                        if (bookedTimeSlots.some(slot => slot.startsWith(buttonTime.slice(0, 5)))) {
+                            button.classList.add('booked');
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error occurred while fetching data:', error);
+            }
+        }
+
+        async function handleTimeSelection(event) {
+            const button = event.target;
+            if (button.classList.contains('booked')) return;
+
+            const court = button.dataset.court;
+            const time = button.dataset.time;
+            const date = document.getElementById("date").value;
+
+            if (confirm(`Do you want to book Court ${court} at ${time} on ${date}?`)) {
+                await makeReservation(date, time, court);
+            }
+        }
+
+        async function makeReservation(date, time, court) {
+            const token = getToken();
+            if (!token) {
+                console.error('Token not found');
+                return;
+            }
+
+            const data = JSON.stringify({ date, time, court });
+            const headers = {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+
+            try {
+                const response = await fetch('/api/reservation', {
+                    method: 'POST',
+                    headers,
+                    body: data
+                });
+                if (response.ok) {
+                    alert('Reservation successful');
+                    fetchBookedTimeSlots();
+                } else {
+                    alert('Reservation failed');
+                }
+            } catch (error) {
+                console.error('Error occurred while making reservation:', error);
+                alert('Error occurred while making reservation');
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById("date");
+            dateInput.setAttribute("min", today);
+            dateInput.value = today;
+
+            createCourtSections();
+            fetchBookedTimeSlots();
+
+            dateInput.addEventListener("change", fetchBookedTimeSlots);
+
+            const logoutLink = document.getElementById("logout");
+            if (logoutLink) {
+                logoutLink.addEventListener("click", function(event) {
+                    event.preventDefault();
+                    localStorage.removeItem('token');
+                    window.location.href = "/login";
+                });
+            }
+        });
+    </script>
+</body>
+</html>

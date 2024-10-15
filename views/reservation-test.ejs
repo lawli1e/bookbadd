@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservation Form</title>
+    <style>
+        /* Add your CSS styling here */
+        /* This is just basic styling, you can customize it further */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap');
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        select option.booked {
+            color: red;
+        }
+        *{
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            background-color: #eaebec;
+        }
+        li, a, button {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            color: #000000;
+            text-decoration: none;
+        }
+        header{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 10%;
+        }
+        .logo{
+            cursor: pointer;
+        }
+        .nav_links{
+            list-style: none;
+        }
+        .nav_links li {
+            display: inline-block;
+            padding: 0px 20px;
+        }
+        .nav_links li a {
+            transition: all 0.3s ease 0s;
+        }
+        .nav_links li a:hover{
+            color: #0088a9;
+        }
+        button{
+            padding: 9px 25px;
+            background-color: rgba(0,136,169,1);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease 0s;
+        }
+        button:hover{
+            background-color: rgba(0, 136, 169, 0.8);
+        }
+        .divider {
+            height: 2px; 
+            background-color: #ccc;
+            margin: 20px auto;
+            width: 90%; 
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img class="logo" src="/views/images/logo.png" alt="logo">
+        <nav>
+            <ul class="nav_links">
+                <li><a href="/reservation">Reservations</a></li>
+                <li><a href="/bookingStatus">Booking</a></li>
+                <li><a href="/payment">Payment</a></li>
+                <li><a href="javascript:void(0)" id="logout">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="divider"></div>
+
+<form id="reservationForm">
+    <h2>Make a Reservation</h2>
+    <label for="date">Date:</label>
+    <input type="date" id="date" name="date" required min="YYYY-MM-DD">
+    <form action="/action_page.php">
+        <label for="court">court:</label>
+        <select name="court" id="court">
+          <option value="1">Volvo</option>
+          <option value="2">Saab</option>
+        </select>
+        <br><br>
+      </form>
+
+    <label for="time">Time:</label>
+    <select id="time" name="time" required>
+        <option value="" selected disabled>Select a time</option>
+        <option value="08:00">8:00 AM</option>
+        <option value="09:00">9:00 AM</option>
+        <option value="10:00">10:00 AM</option>
+        <option value="11:00">11:00 AM</option>
+        <option value="12:00">12:00 PM</option>
+        <option value="13:00">1:00 PM</option>
+        <option value="14:00">2:00 PM</option>
+        <option value="15:00">3:00 PM</option>
+        <option value="16:00">4:00 PM</option>
+        <option value="17:00">5:00 PM</option>
+        <option value="18:00">6:00 PM</option>
+        <option value="19:00">7:00 PM</option>
+        <option value="20:00">8:00 PM</option>
+    </select>
+
+    <input type="submit" value="Submit Reservation">
+</form>
+
+<script>
+    // Function to get the token from localStorage
+    function getToken() {
+        return localStorage.getItem('token');
+    }
+
+    // Function to handle form submission
+    document.getElementById("reservationForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        // Get the token
+        const token = getToken();
+        if (!token) {
+            console.error('Token not found');
+            return;
+        }
+
+        // Get the date and time values from the form
+        const date = document.getElementById("date").value;
+        const time = document.getElementById("time").value;
+
+        // Prepare the data for the request body
+        const data = JSON.stringify({ date, time });
+
+        // Include the token in the request headers
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+
+        // Send the reservation data to the backend
+        try {
+    const response = await fetch('/api/reservation', { // Corrected endpoint URL
+        method: 'POST',
+        headers,
+        body: data
+    });
+    if (response.ok) {
+        console.log('Reservation successful');
+        // Handle success, such as displaying a success message
+    } else {
+        console.error('Reservation failed');
+        // Handle failure, such as displaying an error message
+    }
+} catch (error) {
+    console.error('Error occurred while making reservation:', error);
+    // Handle errors, such as displaying an error message
+}
+    });
+
+    // Set the minimum date to today's date when the page loads
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("date").setAttribute("min", today);
+
+    const fetchBookedTimeSlots = async () => {
+    const date = document.getElementById("date").value;
+    try {
+        const response = await fetch('/api/bookings?date=' + date);
+        if (response.ok) {
+            const bookedTimeSlots = await response.json();
+            console.log('Booked time slots:', bookedTimeSlots);
+            const selectTime = document.getElementById("time");
+            const options = selectTime.options;
+            console.log(selectTime.options)
+            // Reset color for all options
+            for (let i = 0; i < options.length; i++) {
+                console.log('Option value:', options[i].value); // Log option value
+                console.log('Option text:', options[i].textContent); // Log option text
+                console.log('Resetting option:', options[i]);
+                options[i].classList.remove('booked');
+            }
+
+            // Mark booked time slots
+            bookedTimeSlots.forEach(time => {
+            // Extract only the hour and minute part (HH:MM) from the time value
+            const optionValue = time.substring(0, 5); // Assuming time is in "HH:MM:SS" format
+            const option = selectTime.querySelector(`option[value="${optionValue}"]`);
+            console.log('Time:', time); // Log the value being searched for
+            console.log('Option:', option); // Log the found option
+            if (option) {
+                option.classList.add('booked');
+            }
+        });
+
+
+        } else {
+            console.error('Failed to fetch booked time slots');
+        }
+        } catch (error) {
+            console.error('Error occurred while fetching booked time slots:', error);
+        }
+    };
+
+// Fetch booked time slots when the date input changes
+document.getElementById("date").addEventListener("change", fetchBookedTimeSlots);
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Add event listener to the logout link
+    const logoutLink = document.getElementById("logout");
+    if (logoutLink) {
+        logoutLink.addEventListener("click", function(event) {
+            event.preventDefault(); // Prevent default link behavior
+
+            // Remove JWT token from local storage
+            localStorage.removeItem('token');
+
+            // Redirect the user to the login page or any other appropriate page
+            window.location.href = "/login"; // Redirect to login page
+        });
+    }
+});
+</script>
+
+</body>
+</html>

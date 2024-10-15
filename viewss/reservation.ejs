@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservation Form</title>
+    <style>
+        /* Add your CSS styling here */
+        /* This is just basic styling, you can customize it further */
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        select option.booked {
+            color: red;
+        }
+        #timeButtons button {
+            display: inline-block;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+        #timeButtons button.booked {
+            background-color: #F24C3D;
+            color: white;
+            cursor: not-allowed;
+        }
+        #timeButtons button:hover {
+            background-color: #e0e0e0;
+        }
+        #timeButtons button:not(.booked) {
+        background-color: #0D9276; /* Change background color to green for buttons that are not booked */
+        color: white;
+        cursor: pointer; /* Reset cursor to pointer */
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap');
+        *{
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            background-color: #FFF6E9;
+        }
+        li, a, button {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 18px;
+            text-align: center;
+            color: #40A2E3;
+            text-decoration: none;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px;
+        }
+        .nav {
+            display: flex; /* Add flexbox */
+            justify-content: center; /* Center items horizontally */
+            align-items: center; /* Center items vertically */
+        }
+        .nav_links{
+            list-style: none;
+            display: flex; /* Add flexbox */
+            justify-content: center; /* Center items horizontally */
+            align-items: center; /* Center items vertically */
+        }
+        .nav_links li {
+            display: inline-block;
+            padding: 0px 150px;
+        }
+        .nav_links li a {
+            transition: all 0.3s ease 0s;
+        }
+        .nav_links li a:hover{
+            color: #0088a9;
+        }
+        button{
+            padding: 9px 25px;
+            background-color: rgba(0,136,169,1);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease 0s;
+        }
+        button:hover{
+            background-color: rgba(0, 136, 169, 0.8);
+        }
+        .divider {
+            height: 2px; 
+            background-color: #ccc;
+            margin: 20px auto;
+            width: 100%; 
+        }
+        .detail_images
+        {
+           height: 60px;
+           width: 100%;
+        }
+        .details
+        {
+            margin: auto;
+            width: 50%;
+            padding: 10px;
+        }
+        ul
+         {
+            display : flex;
+            justify-content: space-evenly;
+            
+          }
+          li:nth-child(1) { /* ตัวเลือกแรก */
+            color: #45a049; /* สีสำหรับ "ไม่ว่าง" */
+          }
+          
+          li:nth-child(2) { /* ตัวเลือกที่สอง */
+            color: #F24C3D; /* สีสำหรับ "ว่าง" */
+          }
+          .price 
+          {
+            display: flex;
+            text-align: right;
+            color: #F24C3D;
+            font-weight: bold;
+          }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <nav>
+            <ul class="nav_links">
+                <li><a href="/reservation">Reservations</a></li>
+                <li><a href="/bookingStatus">Booking</a></li>
+                <li><a href="/payment">Payment</a></li>
+                <li><a href="javascript:void(0)" id="logout">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="divider"></div>
+    <div class="detail_imges">
+        <img src="images/bad.png" >
+    </div>
+    <div class="details">
+        <p><h3>Winner Sports Avenue</h3></p>
+        <br>
+        <p><b>Location:</b> Pracharadbumphen 24, Bangkok, Thailand, Bangkok</p>
+        <p><b>Phone:</b> 093-757-2947</p>
+        <p><b>Email:</b> winner.sportscomplex@gmail.com</p>
+        <br>
+        <p><b>! If you want to refund please contact to owner court in 24 hour</b></p>
+    </div>
+    <div class="status">
+        <ul>
+            <li>Available</li>
+            <li>Unavailable</li>
+          </ul>
+          
+    </div>
+    
+    <div class="divider"></div>
+        
+<form id="reservationForm">
+    <h2>Make a Reservation</h2>
+    <br>
+    <div class="price">
+        <p>Price 220 Bath for hour.</p>
+    </div>
+    <br>
+    <label for="date">Date:</label>
+    <input type="date" id="date" name="date" required min="YYYY-MM-DD">
+    <br>
+    <br>
+    <label for="court">Court:</label>
+    <select name="court" id="court">
+      <option value="1">1</option>
+      <option value="2">2</option>
+    </select>
+    <br><br>
+
+    <label>Time:</label>
+    <div id="timeButtons"></div>
+
+    <input type="hidden" id="selectedTime" name="selectedTime">
+
+    <input type="submit" value="Submit Reservation" style="display: none;">
+</form>
+
+
+<script>
+    // Function to get the token from localStorage
+    function getToken() {
+        return localStorage.getItem('token');
+    }
+
+    // Function to create time buttons
+    async function createTimeButtons() {
+        const timeButtonsContainer = document.getElementById("timeButtons");
+        timeButtonsContainer.innerHTML = ""; // Clear previous buttons
+
+        const timeOptions = [
+            "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM",
+            "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM",
+            "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM", "08:00 PM" , "09:00 PM"
+        ];
+
+        timeOptions.forEach(time => {
+            const button = document.createElement("button");
+            button.textContent = time;
+            button.type = "button";
+            button.value = time;
+            button.addEventListener("click", function() {
+                // Set the selected time value
+                document.getElementById("selectedTime").value = this.value;
+                // Call the function to make reservation
+                makeReservation();
+            });
+            timeButtonsContainer.appendChild(button);
+        });
+
+        // Fetch booked time slots when the page loads
+        fetchBookedTimeSlots();
+    }
+
+    document.getElementById("court").addEventListener("change", function() {
+    // Fetch booked time slots when the court selection changes
+    fetchBookedTimeSlots();
+});
+
+const fetchBookedTimeSlots = async () => {
+    const date = document.getElementById("date").value;
+    const court = document.getElementById("court").value; // Get the selected court number
+    console.log
+    try {
+        const response = await fetch(`/api/bookings?date=${date}&court=${court}`); // Include court parameter in the URL
+        if (response.ok) {
+            const bookedTimeSlots = await response.json();
+
+            // Reset styling for all buttons
+            const timeButtons = document.querySelectorAll("#timeButtons button");
+            for (let i = 0; i < timeButtons.length; i++) {
+                timeButtons[i].classList.remove('booked');
+            }
+
+            // Mark booked time slots
+            bookedTimeSlots.forEach(time => {
+                const buttonValue = time.substring(0, 5);
+                const button = document.querySelector(`#timeButtons button[value="${buttonValue}"]`) || document.querySelector(`#timeButtons button[value*="${buttonValue}"]`);
+
+                if (button) {
+                    button.classList.add('booked');
+                }
+            });
+        } else {
+            console.error('Failed to fetch booked time slots');
+        }
+    } catch (error) {
+        console.error('Error occurred while fetching booked time slots:', error);
+    }
+};
+
+    // Function to make reservation
+    async function makeReservation() {
+        // Get the token
+        const token = getToken();
+        if (!token) {
+            console.error('Token not found');
+            return;
+        }
+
+        // Get the date and time values from the form
+        const date = document.getElementById("date").value;
+        const time = document.getElementById("selectedTime").value;
+
+        
+        // Prepare the data for the request body
+        const data = JSON.stringify({ date, time });
+
+        // Include the token in the request headers
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+
+        // Send the reservation data to the backend
+        try {
+            const response = await fetch('/api/reservation', {
+                method: 'POST',
+                headers,
+                body: data
+            });
+            if (response.ok) {
+                console.log('Reservation successful');
+                // Handle success, such as displaying a success message
+                location.reload();
+            } else {
+                console.error('Reservation failed');
+                // Handle failure, such as displaying an error message
+            }
+        } catch (error) {
+            console.error('Error occurred while making reservation:', error);
+            // Handle errors, such as displaying an error message
+        }
+    }
+
+    // Call the function to create time buttons when the page loads
+    document.addEventListener("DOMContentLoaded", createTimeButtons);
+
+    document.addEventListener("DOMContentLoaded", function() {
+    // Set the minimum date to today's date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("date").setAttribute("min", today);
+
+    // Set the default value of the date input field to today's date
+    document.getElementById("date").value = today;
+
+    // Call the function to create time buttons when the page loads
+    createTimeButtons();
+});
+
+    // Set the minimum date to today's date when the page loads
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("date").setAttribute("min", today);
+    document.getElementById("date").addEventListener("change", fetchBookedTimeSlots);
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+    // Add event listener to the logout link
+    const logoutLink = document.getElementById("logout");
+    if (logoutLink) {
+        logoutLink.addEventListener("click", function(event) {
+            event.preventDefault();
+            localStorage.removeItem('token');
+            window.location.href = "/login";
+        });
+    }
+});
+</script>
+
+</body>
+</html>

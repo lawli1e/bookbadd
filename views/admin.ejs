@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payments</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Payments</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Reservation ID</th>
+                <th>Order_ID</th>
+                <th>Payment Slip</th>
+                <th>Verify</th>
+            </tr>
+        </thead>
+        <tbody id="paymentsTableBody">
+            <!-- Payment data will be inserted here -->
+        </tbody>
+    </table>
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            getToken();
+        })
+
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        const token = getToken();
+        if (!token) {
+            console.error('Token not found in localStorage');
+            // Handle the absence of token, e.g., redirect to login page
+        }
+
+        fetch('/api/payments', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch payments');
+            }
+            return response.json();
+        })
+        .then(payments => {
+            const tbody = document.getElementById('paymentsTableBody');
+            payments.forEach(payment => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${payment.user_id}</td>
+                    <td>${payment.reservation_id}</td>
+                    <td>${payment.order_id}</td>
+                    <td><img src="data:image/jpeg;base64,${payment.payment_slip}" alt="Payment Slip" style="max-width: 200px;"></td>
+                    <td>
+                        <button type="button" class="approveBtn" data-payment-id="${payment.id}">Approve</button>
+                        <button type="button" class="declineBtn" data-payment-id="${payment.id}">Decline</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            document.querySelectorAll('.approveBtn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const paymentId = btn.dataset.paymentId;
+                    approvePayment(paymentId);
+                });
+            });
+
+            document.querySelectorAll('.declineBtn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const paymentId = btn.dataset.paymentId;
+                    declinePayment(paymentId);
+                });
+            });
+        })
+        .catch(error => console.error('Error fetching payments:', error));
+
+        async function approvePayment(paymentId) {
+            const token = getToken();
+            if (!token) {
+                console.error('Token not found');
+                return;
+            }
+            try {
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+                const requestBody = JSON.stringify({ paymentId });
+
+                const response = await fetch('/api/payments/approve', {
+                    method: 'POST',
+                    headers,
+                    body: requestBody // Send paymentId in the request body
+                });
+
+                if (response.ok) {
+                    console.log('Approving successful');
+                    location.reload();
+                } else {
+                    console.error('Approving failed');
+                }
+            } catch (error) {
+                console.error('Error approving payment:', error);
+            }
+        }
+
+        async function declinePayment(paymentId) {
+            const token = getToken();
+            if (!token) {
+                console.error('Token not found');
+                return;
+            }
+            try {
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+                const requestBody = JSON.stringify({ paymentId });
+
+                const response = await fetch('/api/payments/decline', {
+                    method: 'POST',
+                    headers,
+                    body: requestBody // Send paymentId in the request body
+                });
+
+                if (response.ok) {
+                    console.log('Declined successful');
+                    location.reload();
+                } else {
+                    console.error('Declined failed');
+                }
+            } catch (error) {
+                console.error('Error declined payment:', error);
+            }
+        }
+    </script>
+</body>
+</html>

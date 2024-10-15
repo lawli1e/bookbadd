@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Submission</title>
+    <!-- Add your CSS styles here -->
+    <style>
+        /* Add your CSS styles here */
+        /* This is just basic styling, you can customize it further */
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .time-slot {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .status-table {
+            max-width: 400px;
+            margin: 0 auto;
+            border-collapse: collapse;
+        }
+        .status-table th, .status-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .status-table th {
+            background-color: #f2f2f2;
+        }
+        #totalPrice {
+            font-weight: bold;
+            text-align: center; /* Center the text */
+            margin-top: 20px; /* Add some top margin for spacing */
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap');
+        *{
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            background-color: #eaebec;
+        }
+        li, a, button {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            color: #000000;
+            text-decoration: none;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 10%;
+        }
+        .nav {
+            display: flex; /* Add flexbox */
+            justify-content: center; /* Center items horizontally */
+            align-items: center; /* Center items vertically */
+        }
+        .nav_links{
+            list-style: none;
+            display: flex; /* Add flexbox */
+            justify-content: center; /* Center items horizontally */
+            align-items: center; /* Center items vertically */
+        }
+        .nav_links li {
+            display: inline-block;
+            padding: 0px 150px;
+        }
+        .nav_links li a {
+            transition: all 0.3s ease 0s;
+        }
+        .nav_links li a:hover{
+            color: #0088a9;
+        }
+        button{
+            padding: 9px 25px;
+            background-color: rgba(0,136,169,1);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease 0s;
+        }
+        button:hover{
+            background-color: rgba(0, 136, 169, 0.8);
+        }
+        .divider {
+            height: 2px; 
+            background-color: #ccc;
+            margin: 20px auto;
+            width: 90%; 
+        }
+        
+    </style>
+</head>
+<body>
+
+<header>
+    <nav>
+        <ul class="nav_links">
+            <li><a href="/reservation">Reservations</a></li>
+            <li><a href="/bookingStatus">Booking</a></li>
+            <li><a href="javascript:void(0)" id="logout">Logout</a></li>
+        </ul>
+    </nav>
+</header>
+<div class="divider"></div>
+
+<table class="status-table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Select</th>
+        </tr>
+    </thead>
+    <tbody id="bookingTableBody">
+        <!-- Table rows will be dynamically added here -->
+    </tbody>
+</table>
+<form id="paymentForm" enctype="multipart/form-data">
+    <label for="paymentSlip">Payment Slip:</label>
+    <input type="file" id="paymentSlip" name="paymentSlip" required>
+    <button type="submit">Submit</button>
+</form>
+
+<div id="totalPrice">Total Price: 0</div>
+
+<script>
+    let totalPrice = 0;
+
+    function getToken() {
+        return localStorage.getItem('token');
+    }
+
+    async function fetchBookingStatus() {
+        try {
+            const response = await fetch('/api/booking-status', {
+                headers: {
+                    'Authorization': `Bearer ${getToken()}`
+                }
+            });
+            if (response.ok) {
+                const bookingData = await response.json();
+                updateBookingTable(bookingData);
+            } else {
+                console.error('Failed to fetch booking status');
+            }
+        } catch (error) {
+            console.error('Error occurred while fetching booking status:', error);
+        }
+    }
+
+    function updateBookingTable(bookingData) {
+        const tableBody = document.getElementById('bookingTableBody');
+        tableBody.innerHTML = ''; // Clear existing table rows
+        const pendingBookings = bookingData.filter(booking => booking.status === 'pending');
+        bookingData.forEach(booking => {
+            const row = document.createElement('tr');
+            const formattedDate = booking.date.split('T')[0];
+            row.innerHTML = `
+                <td>${formattedDate}</td>
+                <td>${booking.time}</td>
+                <td>${booking.status}</td>
+                <td><input type="checkbox" class="time-slot" data-reservation-id="${booking.id}" data-time="${booking.time}"></td>
+            `;
+            tableBody.appendChild(row);
+        });
+        setupCheckboxEventListeners();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchBookingStatus();
+
+        const paymentForm = document.getElementById('paymentForm');
+        paymentForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(paymentForm);
+
+            const checkboxes = document.querySelectorAll('.time-slot');
+            checkboxes.forEach(function(checkbox) {
+                if (checkbox.checked) {
+                    formData.append('reservationId', checkbox.getAttribute('data-reservation-id'));
+                }
+            });
+
+            const token = getToken();
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+            try {
+                const response = await fetch('/api/photoDB', {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+                if (response.ok) {
+                    window.location.href = "/bookingStatus-pending";
+                    console.log('Payment submitted successfully');
+                } else {
+                    console.error('Failed to submit payment');
+                }
+            } catch (error) {
+                console.error('Error occurred while submitting payment:', error);
+            }
+        });
+
+        setupCheckboxEventListeners();
+
+    });
+
+    function setupCheckboxEventListeners() {
+    const checkboxes = document.querySelectorAll('.time-slot');
+    let totalPrice = 0;
+
+    checkboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const price = 220;
+
+            if (this.checked) {
+                totalPrice += price;
+                console.log('Selected reservation ID:', this.getAttribute('data-reservation-id'), 'Price:', totalPrice);
+            } else {
+                totalPrice -= price;
+                console.log('Deselected reservation ID:', this.getAttribute('data-reservation-id'), 'Price:', totalPrice);
+            }
+            document.getElementById('totalPrice').textContent = 'Total Price: ' + totalPrice;
+
+        });
+    });
+}
+
+    const logoutLink = document.getElementById("logout");
+    if (logoutLink) {
+        logoutLink.addEventListener("click", function(event) {
+            event.preventDefault();
+            localStorage.removeItem('token');
+            window.location.href = "/login";
+        });
+    }
+</script>
+</body>
+</html>
